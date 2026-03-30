@@ -41,17 +41,17 @@
             <label>Rate (% Per Month)</label>
             <input type="number" id="r" value="2.5" step="0.1" inputmode="decimal">
         </div>
-        <label>Start Date</label>
+        <label>Start Date (DD/MM/YYYY)</label>
         <div class="input-group date-grid"><select id="d1d"></select><select id="d1m"></select><select id="d1y"></select></div>
-        <label>End Date</label>
+        <label>End Date (DD/MM/YYYY)</label>
         <div class="input-group date-grid"><select id="d2d"></select><select id="d2m"></select><select id="d2y"></select></div>
         
         <div class="input-group">
             <label>Calculation Mode</label>
             <select id="methodSelect">
-                <option value="auto">Auto</option>
+                <option value="auto">Auto </option>
                 <option value="simple"> Simple</option>
-                <option value="compound">Compound</option>
+                <option value="compound"> Compound</option>
             </select>
         </div>
 
@@ -77,9 +77,17 @@
         const d = [document.getElementById('d1d'), document.getElementById('d2d')];
         const m = [document.getElementById('d1m'), document.getElementById('d2m')];
         const y = [document.getElementById('d1y'), document.getElementById('d2y')];
+        
+        // Populate Days 01-31
         for(let i=1; i<=31; i++) d.forEach(el => el.options.add(new Option(i<10?'0'+i:i, i)));
+        
+        // Populate Months 01-12
         for(let i=0; i<12; i++) m.forEach(el => el.options.add(new Option((i+1)<10?'0'+(i+1):(i+1), i)));
-        for(let i=2024; i<=2035; i++) y.forEach(el => el.options.add(new Option(i, i)));
+        
+        // NEW: Populate Years 2010 to 2100
+        for(let i=2010; i<=2100; i++) y.forEach(el => el.options.add(new Option(i, i)));
+        
+        // Set Today as Default
         const n = new Date();
         d[0].value=n.getDate(); m[0].value=n.getMonth(); y[0].value=n.getFullYear();
         d[1].value=n.getDate(); m[1].value=n.getMonth(); y[1].value=n.getFullYear();
@@ -105,6 +113,7 @@
         if(diff <= 30) m = 1;
         else {
             let f = Math.floor(diff/30), x = diff%30;
+            // Saloni Rule: <=5 rounded down, 6-20 is 0.5, >=21 rounded up
             m = x <= 5 ? f : (x >= 6 && x <= 20 ? f+0.5 : f+1);
         }
 
