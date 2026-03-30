@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Saloni Finance Pro</title>
+    <style>
+        :root { --navy: #0f172a; --accent: #2563eb; --gold: #f59e0b; --bg: #f8fafc; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; padding: 10px; color: var(--navy); }
+        .app-card { width: 100%; max-width: 400px; background: #fff; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #e2e8f0; }
+        .header { background: var(--navy); color: white; padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); }
+        .header h1 { margin: 0; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; }
+        .form-body { padding: 15px 20px; }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 4px; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #fff; }
+        input:focus { border-color: var(--accent); }
+        .date-grid { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; }
+        .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+        .calc-btn { flex: 2; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .reset-btn { flex: 1; padding: 16px; background: #f1f5f9; color: #64748b; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .calc-btn:active, .reset-btn:active { transform: scale(0.96); }
+        .result-box { margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; display: none; }
+        .res-line { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #475569; }
+        .total-display { text-align: center; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+        .total-amt { font-size: 30px; font-weight: 800; color: var(--navy); }
+        .interest-amt { font-size: 18px; color: #059669; font-weight: 700; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; margin-bottom: 10px; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="app-card">
+    <div class="header"><h1>SALONI FINANCE</h1></div>
+    <div class="form-body">
+        <div class="input-group">
+            <label>Principal (₹)</label>
+            <input type="number" id="p" placeholder="0.00" inputmode="decimal">
+        </div>
+        <div class="input-group">
+            <label>Rate (% Per Month)</label>
+            <input type="number" id="r" value="2.5" step="0.1" inputmode="decimal">
+        </div>
+        <label>Start Date</label>
+        <div class="input-group date-grid"><select id="d1d"></select><select id="d1m"></select><select id="d1y"></select></div>
+        <label>End Date</label>
+        <div class="input-group date-grid"><select id="d2d"></select><select id="d2m"></select><select id="d2y"></select></div>
+        
+        <div class="input-group">
+            <label>Calculation Mode</label>
+            <select id="methodSelect">
+                <option value="auto">Auto </option>
+                <option value="simple"> Simple</option>
+                <option value="compound"> Compound</option>
+            </select>
+        </div>
+
+        <div class="btn-row">
+            <button class="reset-btn" onclick="resetForm()">RESET</button>
+            <button class="calc-btn" onclick="calculate()">CALCULATE</button>
+        </div>
+
+        <div id="res" class="result-box">
+            <div id="methodBadge" class="badge">METHOD</div>
+            <div class="res-line"><span>Days Count:</span> <span id="outD"></span></div>
+            <div class="res-line"><span>Billing Months:</span> <span id="outM"></span></div>
+            <div class="total-display">
+                <div id="outI" class="interest-amt"></div>
+                <div class="total-amt" id="outTot"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function init() {
+        const d = [document.getElementById('d1d'), document.getElementById('d2d')];
+        const m = [document.getElementById('d1m'), document.getElementById('d2m')];
+        const y = [document.getElementById('d1y'), document.getElementById('d2y')];
+        for(let i=1; i<=31; i++) d.forEach(el => el.options.add(new Option(i<10?'0'+i:i, i)));
+        for(let i=0; i<12; i++) m.forEach(el => el.options.add(new Option((i+1)<10?'0'+(i+1):(i+1), i)));
+        for(let i=2024; i<=2035; i++) y.forEach(el => el.options.add(new Option(i, i)));
+        const n = new Date();
+        d[0].value=n.getDate(); m[0].value=n.getMonth(); y[0].value=n.getFullYear();
+        d[1].value=n.getDate(); m[1].value=n.getMonth(); y[1].value=n.getFullYear();
+    }
+    init();
+
+    function resetForm() {
+        document.getElementById('p').value = "";
+        document.getElementById('res').style.display = 'none';
+    }
+
+    function calculate() {
+        const P = parseFloat(document.getElementById('p').value);
+        const R = parseFloat(document.getElementById('r').value) / 100;
+        const s = new Date(document.getElementById('d1y').value, document.getElementById('d1m').value, document.getElementById('d1d').value);
+        const e = new Date(document.getElementById('d2y').value, document.getElementById('d2m').value, document.getElementById('d2d').value);
+        const mode = document.getElementById('methodSelect').value;
+
+        if(isNaN(P) || e < s) { alert("Invalid Amount or Date!"); return; }
+        const diff = Math.ceil(Math.abs(e - s) / 86400000);
+        
+        let m;
+        if(diff <= 30) m = 1;
+        else {
+            let f = Math.floor(diff/30), x = diff%30;
+            m = x <= 5 ? f : (x >= 6 && x <= 20 ? f+0.5 : f+1);
+        }
+
+        let isC = (mode === 'compound') || (mode === 'auto' && m > 14);
+        let tot = isC ? P * Math.pow((1+R), m) : P * (1 + (R*m));
+
+        document.getElementById('res').style.display = 'block';
+        document.getElementById('outD').innerText = diff + " Days";
+        document.getElementById('outM').innerText = m + " Months";
+        document.getElementById('methodBadge').innerText = isC ? "COMPOUND" : "SIMPLE";
+        document.getElementById('methodBadge').style.background = isC ? "#f59e0b" : "#3b82f6";
+        document.getElementById('outI').innerText = "Interest: ₹" + (tot-P).toLocaleString('en-IN', {maximumFractionDigits:2});
+        document.getElementById('outTot').innerText = "₹" + tot.toLocaleString('en-IN', {maximumFractionDigits:2});
+    }
+</script>
+</body>
+</html>
